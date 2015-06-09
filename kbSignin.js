@@ -9,23 +9,31 @@ var http = require("http"),
 var kbpgp = Promise.promisifyAll(require("kbpgp"));
 
 var KeybaseSignin = module.exports.KeybaseSignin = function (params) {
-    if (params.AWS) {
-        this.resultCallback = KeybaseSignin.makeAWSLambdaCallback(params.AWS);
-    } else if (params.Response) {
-        this.resultCallback = KeybaseSignin.makeHTTPCallback(params.Response);
+    if (params) {
+        if (params.AWS) {
+            this.resultCallback = KeybaseSignin.makeAWSLambdaCallback(params.AWS);
+        } else if (params.Response) {
+            this.resultCallback = KeybaseSignin.makeHTTPCallback(params.Response);
+        }
     }
 };
 
 KeybaseSignin.pkey_username_url = "https://keybase.io:443/_/api/1.0/user/lookup.json?usernames=%s&fields=basics,profile,public_keys";
 KeybaseSignin.pkey_fingerprint_url = "https://keybase.io:443/_/api/1.0/user/lookup.json?key_fingerprint=%s&fields=basics,profile,public_keys";
 
-KeybaseSignin.generateBlob = function (siteId) {
+KeybaseSignin.prototype.generateBlob = function (siteId) {
     var random = crypto.randomBytes(64).toString('base64');
 
-    return {
+    var blob = {
         siteId: siteId,
         token: random,
     };
+
+    if (this.resultCallback) {
+        this.resultCallback(200, blob);
+    }
+
+    return blob;
 };
 
 KeybaseSignin.validateBlob = function (blob) {
