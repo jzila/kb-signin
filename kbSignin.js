@@ -19,6 +19,15 @@ var KeybaseSignin = module.exports.KeybaseSignin = function (params) {
 KeybaseSignin.pkey_username_url = "https://keybase.io:443/_/api/1.0/user/lookup.json?usernames=%s&fields=basics,profile,public_keys";
 KeybaseSignin.pkey_fingerprint_url = "https://keybase.io:443/_/api/1.0/user/lookup.json?key_fingerprint=%s&fields=basics,profile,public_keys";
 
+KeybaseSignin.generateBlob = function (siteId) {
+    var random = crypto.randomBytes(64).toString('base64');
+
+    return {
+        siteId: siteId,
+        token: random,
+    };
+};
+
 KeybaseSignin.validateBlob = function (blob) {
 	return blob.siteId && blob.token && blob.token.length >= 85;
 };
