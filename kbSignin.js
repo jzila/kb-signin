@@ -126,7 +126,7 @@ KeybaseSignin.prototype.lookupKeybase = function (blob, signature) {
     var kb = this;
 
 	if (!KeybaseSignin.validateBlob(blob)) {
-		console.log("Signature blob not valid. Blob: " + blob);
+		console.error("Signature blob not valid. Blob: " + blob);
 		this.resultCallback(400, "Invalid signature blob");
 	}
 
@@ -158,7 +158,7 @@ KeybaseSignin.prototype.handleKbCertVerify = async(function(publicData, blob, si
         if (!user) {
             throw "Error obtaining matching public key";
         }
-        var kms, km, ring, literals;
+        var kms, km, skms, skm, ring, literals;
         try {
             kms = await(kbpgp.KeyManager.import_from_armored_pgpAsync({armored: user.public_keys.primary.bundle}));
         } catch (err) {
@@ -168,12 +168,26 @@ KeybaseSignin.prototype.handleKbCertVerify = async(function(publicData, blob, si
             throw "Unable to load key manager";
         }
         km = kms[0];
-        ring = new kbpgp.keyring.KeyRing;
-        ring.add_key_managerAsync(km);
+        ring = new kbpgp.keyring.KeyRing();
         try {
+            ring.add_key_managerAsync(km);
+            literals = await(kbpgp.unboxAsync({keyfetch: ring, armored: blob.signed_public_key}));
+        } catch(err) {
+            throw "Unable to verify signature on session public key";
+        }
+        var publicKey = literals[0].toString();
+        try {
+            skms = await(kbpgp.KeyManager.import_from_armored_pgpAsync({armored: publicKey}));
+        } catch (err) {
+            throw "Unable to load session public key";
+        }
+        skm = skms[0];
+        ring = new kbpgp.keyring.KeyRing();
+        try {
+            ring.add_key_managerAsync(skm);
             literals = await(kbpgp.unboxAsync({keyfetch: ring, armored: signature}));
         } catch(err) {
-            throw "Unable to verify signature";
+            throw "Unable to verify signature on session public key";
         }
         var decryptedSignature = literals[0].toString();
         var blobFromSignature = JSON.parse(decryptedSignature);
