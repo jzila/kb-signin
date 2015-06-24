@@ -179,7 +179,7 @@ KeybaseSignin.prototype.handleKbCertVerify = async(function(publicData, blob, si
         try {
             skms = await(kbpgp.KeyManager.import_from_armored_pgpAsync({armored: publicKey}));
         } catch (err) {
-            throw "Unable to load session public key";
+            throw "Unable to load session public key. Error: " + JSON.stringify(err);
         }
         skm = skms[0];
         ring = new kbpgp.keyring.KeyRing();

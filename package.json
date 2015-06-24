@@ -4,7 +4,7 @@
   "description": "KB Signing Library",
   "main": "kbSignin.js",
   "dependencies": {
-    "kbpgp": "2.0.1",
+    "kbpgp": ">=2.0.15",
     "asyncawait": "0.7.3",
     "bluebird": "2.9.24"
   },
