@@ -81,10 +81,10 @@ KeybaseSignin.makeAWSLambdaCallback = function(params) {
     var loginProvider = params.LoginProvider;
     var identityId = params.IdentityId;
     var context = params.LambdaContext;
+    var user_auth_func = params.UserAuthenticator;
 
     return function(errorCode, result) {
-        var kb_uid;
-        if (errorCode == 200 && result && result.user && result.user.kb_uid) {
+        if (errorCode == 200 && result && result.user && result.user.kb_uid && user_auth_func(result.user)) {
             var params = {
                 IdentityPoolId: identityPoolId,
                 IdentityId: identityId,
@@ -196,16 +196,16 @@ KeybaseSignin.prototype.handleKbCertVerify = async(function(publicData, blob, si
         }
         var user_name = "",
             location = "";
-        if (user['profile']) {
-            var profile = user['profile'];
-            user_name = profile['full_name'] || user_name;
-            location = profile['location'] || location;
+        if (user.profile) {
+            var profile = user.profile;
+            user_name = profile.full_name || user_name;
+            location = profile.location || location;
         }
         this.resultCallback(200, {
             status: {code: 0, name: "OK"},
             user: {
-                kb_username: user['basics']['username'],
-                kb_uid: user['id'],
+                kb_username: user.basics.username,
+                kb_uid: user.id,
                 full_name: user_name,
                 location: location,
                 token: blob.token
